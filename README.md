@@ -1,2 +1,2 @@
 # VectorTilesWithXamarinMaps
-A sample of mapping binary vector tile data onto Xamarin Maps for Android, iOS and Universal Windows apps
+A sample Android, iOS and Windows Universal app that maps vector tile data onto Xamarin Maps
