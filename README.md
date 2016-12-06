@@ -1,7 +1,7 @@
 ## Vector Tiles With Xamarin Forms Maps
 A sample Android, iOS and Windows Universal app that maps vector tile data onto a Xamarin Forms Map control
 
-![Screenshot of UWP and iOS](https://github.com/ryanlowdermilk/VectorTilesWithXamarinMaps/blob/master/uwp_and_ios_screenshot.png?raw=true)
+![Screenshot of UWP and iOS](https://github.com/ryanlowdermilk/VectorTilesWithXamarinMaps/blob/master/uwp_android_ios_screenshot.png?raw=true)
 
 
 ### Get Started
