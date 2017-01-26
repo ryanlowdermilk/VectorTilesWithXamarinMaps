@@ -1,6 +1,9 @@
 ﻿using Mapbox.Vector.Tile;
 using System;
 using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Reflection;
 using Xamarin.Forms;
 using Xamarin.Forms.Maps;
@@ -32,6 +35,19 @@ namespace MapFilter
             int zoom = (int)Math.Floor(Math.Log(360 / LatLng, 2));
             return zoom;
         }
+
+        private Stream GetTileFromWeb(Uri uri)
+        {
+            var gzipWebClient = new HttpClient(new HttpClientHandler()
+            {
+                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+            });
+            var bytes = gzipWebClient.GetByteArrayAsync(uri).Result;
+
+            var stream = new MemoryStream(bytes);
+            return stream;
+        }
+
 
         public TileData WorldToTilePos(double lon, double lat, Map map)
         {
@@ -66,22 +82,29 @@ namespace MapFilter
                 MapStore.XY.Add(key, true);
             }
 
-            Assembly assembly = GetType().GetTypeInfo().Assembly;
-            string binaryFile = $"MapFilter.{VectorTileDataFolder}.{t.Z}_{x}_{y}.mvt";
+            // as a sample request Mapzen OSM data in vector tiles format
+            // 
+            var uri = new Uri($"http://vector.mapzen.com/osm/all/{ t.Z }/{ x}/{ y}.mvt");
+            var stream = GetTileFromWeb(uri);
+            if (stream == null)
+                return false;
 
-            using (Stream stream = assembly.GetManifestResourceStream(binaryFile))
+            var layerInfos = VectorTileParser.Parse(stream);
+
+            if (layerInfos.Count == 0)
+                return false;
+
+            // select the POI layer
+            var poiLayer = (from layer in layerInfos where layer.Name == "pois" select layer).FirstOrDefault();
+
+            // todo: add other layers and lines/polygons too
+            // todo: improve styling
+            var fc = poiLayer.ToGeoJSON(x, y, t.Z);
+
+            foreach (var geo in fc.Features)
             {
-                if (stream == null)
-                    return false;
-
-                var layerInfos = VectorTileParser.Parse(stream);
-
-                if (layerInfos.Count == 0)
-                    return false;
-
-                var fc = layerInfos[0]?.ToGeoJSON(x, y, t.Z);
-
-                foreach (var geo in fc.Features)
+                // add check for geometry type
+                if(geo.Geometry is GeoJSON.Net.Geometry.Point)
                 {
                     var lng1 = ((GeoJSON.Net.Geometry.GeographicPosition)((GeoJSON.Net.Geometry.Point)geo.Geometry).Coordinates).Longitude;
                     var lat1 = ((GeoJSON.Net.Geometry.GeographicPosition)((GeoJSON.Net.Geometry.Point)geo.Geometry).Coordinates).Latitude;
