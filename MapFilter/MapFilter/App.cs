@@ -18,7 +18,7 @@ namespace MapFilter
 
         public App()
         {
-            var map = new Map(MapSpan.FromCenterAndRadius(new Position(38.2527, -85.7585), Distance.FromMiles(1.5)));
+            var map = new Map(MapSpan.FromCenterAndRadius(new Position(52.08, 5.14), Distance.FromMiles(1.5)));
 
             var cp = new ContentPage
             {
@@ -108,7 +108,21 @@ namespace MapFilter
                 {
                     var lng1 = ((GeoJSON.Net.Geometry.GeographicPosition)((GeoJSON.Net.Geometry.Point)geo.Geometry).Coordinates).Longitude;
                     var lat1 = ((GeoJSON.Net.Geometry.GeographicPosition)((GeoJSON.Net.Geometry.Point)geo.Geometry).Coordinates).Latitude;
-                    m.Pins.Add(new Pin() { Position = new Position(lat1, lng1), Label = $"{lng1},{lat1}" });
+                    string attributes=String.Empty;
+                    foreach (var p in geo.Properties){
+                        attributes += p.Key + ": " + p.Value + Environment.NewLine;
+                    }
+                    var pin = new Pin()
+                    {
+                        Position = new Position(lat1, lng1),
+                        Label = $"{lng1},{lat1}",
+                    };
+                    pin.Clicked += async (sender, e) =>
+                    {
+                        await App.Current.MainPage.DisplayAlert("Feature Info", attributes, "Ok");
+                    };
+
+                    m.Pins.Add(pin);
                 }
             }
             return true;
